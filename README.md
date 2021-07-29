@@ -1,4 +1,4 @@
-## Advent of Code Chalanges
+## Advent of Code Challanges
 
 #### Here I solve the advent of code challanges
 
