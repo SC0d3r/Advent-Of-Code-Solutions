@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-
 import numpy as np
+
+# You can find the question in here
+# https://adventofcode.com/2020/day/3
+
 
 def save(data):
     with open("tmp.txt", "w") as f:
