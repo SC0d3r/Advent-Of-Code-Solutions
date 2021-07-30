@@ -3,7 +3,6 @@
 import numpy as np
 import re
 
-ps = []
 required_fields = ["byr","iyr","eyr","hgt","hcl","ecl","pid"]
 def get_num(x):
     try:
