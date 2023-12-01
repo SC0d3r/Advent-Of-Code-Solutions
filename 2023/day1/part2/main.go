@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var nMap = map[string]int{
@@ -32,13 +33,17 @@ func main() {
 
 	lines := strings.Split(content, "\n")
 
+	start := time.Now()
+
 	total := 0
 	for _, ln := range lines {
 		n1, n2 := parse(ln)
 		total += n1*10 + n2
 	}
 
-	fmt.Println("total is", total)
+	elapsed := time.Since(start)
+
+	fmt.Println("total is", total, "elapsed is", elapsed)
 	// fmt.Println(content)
 }
 
