@@ -53,25 +53,27 @@ func parse(line string) (int, int) {
 	ns := strings.Split(line, "")
 	for i, n := range ns {
 		x, err := strconv.Atoi(n)
-		if err != nil {
-			// n was not a valid number
-			if i < 2 {
-				continue
-			}
 
-			maybeNumber, err := ParseEngNumberRepr(ns, i)
-
-			// fmt.Println("maybeNumber", maybeNumber)
-
-			if err != nil {
-				continue
-			}
-
-			res = append(res, maybeNumber)
-		} else {
+		if err == nil {
 			// n was a valid number
 			res = append(res, x)
+			continue
 		}
+
+		// n was not a valid number
+		if i < 2 {
+			continue
+		}
+
+		num, err := ParseEngNumberRepr(ns, i)
+
+		// fmt.Println("maybeNumber", maybeNumber)
+
+		if err != nil {
+			continue
+		}
+
+		res = append(res, num)
 	}
 
 	if len(res) == 0 {
