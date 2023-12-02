@@ -65,7 +65,7 @@ func parse(line string) (int, int) {
 			continue
 		}
 
-		num, err := ParseEngNumberRepr(ns, i)
+		num, err := ParseEngNumberRepr(line, i)
 
 		if err != nil {
 			continue
@@ -77,7 +77,7 @@ func parse(line string) (int, int) {
 	return res[0], res[len(res)-1]
 }
 
-func ParseEngNumberRepr(ns []string, i int) (int, error) {
+func ParseEngNumberRepr(line string, i int) (int, error) {
 	y := i + 1
 
 	for key, val := range nMap {
@@ -85,9 +85,7 @@ func ParseEngNumberRepr(ns []string, i int) (int, error) {
 			continue
 		}
 
-		// fmt.Println("len(ns)", len(ns), "i is", i)
-
-		if key == strings.Join(ns[y-len(key):y], "") {
+		if key == line[y-len(key):y] {
 			return val, nil
 		}
 	}
