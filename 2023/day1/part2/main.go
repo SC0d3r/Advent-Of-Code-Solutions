@@ -67,17 +67,11 @@ func parse(line string) (int, int) {
 
 		num, err := ParseEngNumberRepr(ns, i)
 
-		// fmt.Println("maybeNumber", maybeNumber)
-
 		if err != nil {
 			continue
 		}
 
 		res = append(res, num)
-	}
-
-	if len(res) == 0 {
-		return 0, 0
 	}
 
 	return res[0], res[len(res)-1]
