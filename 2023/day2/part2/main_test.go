@@ -1,6 +1,20 @@
 package main
 
-func equal(a [3]int, b []int) bool {
+import (
+	"testing"
+)
+
+func TestGmp(t *testing.T) {
+	a := [][3]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}
+
+	res := Gmp(a)
+
+	if !eq(res, []int{7, 8, 9}) {
+		t.Errorf("Expected %v, got %v", []int{7, 8, 9}, res)
+	}
+}
+
+func eq(a [3]int, b []int) bool {
 	if len(a) != len(b) {
 		return false
 	}

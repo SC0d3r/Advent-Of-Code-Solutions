@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
-	// "time"
+	"time"
 )
 
 func main() {
@@ -18,27 +18,36 @@ func main() {
 
 	lines := strings.Split(string(file), "\n")
 
-	actual := []int{12, 13, 14}
-
 	total := 0
+	start := time.Now()
 	for _, l := range lines {
-		id, hands := ParseLine(l)
-		if isValid(hands, actual) {
-			total += id
-		}
+		_, hands := ParseLine(l)
+		res := Gmp(hands)
+		total += res[0] * res[1] * res[2]
 	}
+	elpd := time.Since(start)
 
-	fmt.Println("total is", total)
+	fmt.Println("total is", total, "elapsed is", elpd)
 }
 
-func isValid(hands [][3]int, actual []int) bool {
-	for _, cubes := range hands {
-		if cubes[0] > actual[0] || cubes[1] > actual[1] || cubes[2] > actual[2] {
-			return false
+func Gmp(hands [][3]int) [3]int {
+	res := [3]int{0, 0, 0}
+
+	for _, hand := range hands {
+		if hand[0] > res[0] {
+			res[0] = hand[0]
+		}
+
+		if hand[1] > res[1] {
+			res[1] = hand[1]
+		}
+
+		if hand[2] > res[2] {
+			res[2] = hand[2]
 		}
 	}
 
-	return true
+	return res
 }
 
 func ParseLine(line string) (int, [][3]int) {
