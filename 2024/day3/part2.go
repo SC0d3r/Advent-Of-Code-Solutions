@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	file, err := os.Open("./2024/day3/inp0.txt")
+	file, err := os.Open("./2024/day3/inp1.txt")
 
 	if err != nil {
 		log.Fatal(err)
@@ -36,6 +36,7 @@ func parse(data string) []int {
 	res := make([]int, 0)
 
 	i := 0
+	disabled := false
 	for {
 		// safty guard
 		if i > len(data) {
@@ -44,50 +45,68 @@ func parse(data string) []int {
 		}
 		i++
 
-		log.Println("cur is", cur)
+		// log.Println("cur is", cur)
 		if cur >= len(data) {
 			break
 		}
 
-		c, num, err := step(cur, data)
+		c, num, dis, err := step(cur, disabled, data)
+		// log.Println("dis is", dis)
+		disabled = dis
 		cur = c
 		if err != nil {
 			continue
 		}
 
-		res = append(res, num)
+		if !disabled {
+			res = append(res, num)
+		}
 	}
 
 	return res
 }
 
-func step(cur int, data string) (int, int, error) {
+func step(cur int, disabled bool, data string) (int, int, bool, error) {
 	if cur >= len(data) {
 		log.Fatal("out of range")
 	}
 
+	curCmd, found, shouldDisable := stepCMD(cur, data)
+
 	cur = stepMul(cur, data)
+
+	// log.Println("curCmd", curCmd, "cur", cur, "found", found, "shouldDis", shouldDisable)
+
+	if found && curCmd < cur {
+		// here the command is before mul so
+		// we have to apply it
+		disabled = shouldDisable
+	}
+
+	if disabled {
+		return cur, 0, disabled, nil
+	}
 
 	// if it couldnt find a mul and we reach the end
 	if cur >= len(data) {
-		return cur, 0, errors.New("reached end")
+		return cur, 0, disabled, errors.New("reached end")
 	}
 
 	cur, firstNum, err := stepNum(cur, data)
 	if err != nil {
 		// this mul is invalid
-		return cur, 0, errors.New("invalid mul")
+		return cur, 0, disabled, errors.New("invalid mul")
 	}
 	log.Println("first num is", firstNum)
 
 	cur, secondNum, err := stepNum(cur, data)
 	if err != nil {
 		// this mul is invalid
-		return cur, 0, errors.New("invalid mul")
+		return cur, 0, disabled, errors.New("invalid mul")
 	}
 	log.Println("second num is", secondNum)
 
-	return cur, firstNum * secondNum, nil
+	return cur, firstNum * secondNum, disabled, nil
 }
 
 func stepMul(cur int, data string) int {
@@ -121,6 +140,42 @@ func stepMul(cur int, data string) int {
 
 	// search the whole data and didnt find
 	return len(data) // out of range
+}
+
+func nextCMDPartValid(s string, nextPart string) (bool, error) {
+	if s == "" {
+		return nextPart == "d", nil
+	}
+
+	if s == "d" {
+		return nextPart == "o", nil
+	}
+
+	if s == "do" {
+		return nextPart == "n" || nextPart == "(", nil
+	}
+
+	if s == "do(" {
+		return nextPart == ")", nil
+	}
+
+	if s == "don" {
+		return nextPart == "'", nil
+	}
+
+	if s == "don'" {
+		return nextPart == "t", nil
+	}
+
+	if s == "don't" {
+		return nextPart == "(", nil
+	}
+
+	if s == "don't(" {
+		return nextPart == ")", nil
+	}
+
+	return false, errors.New("invalid next")
 }
 
 func next(s string) (string, error) {
@@ -174,4 +229,44 @@ func stepNum(cur int, data string) (int, int, error) {
 	}
 
 	return cur + y, 0, errors.New("invalid number")
+}
+
+func stepCMD(cur int, data string) (int, bool, bool) {
+	s := ""
+	for i, v := range data[cur:] {
+		if s == "" {
+			if v == 'd' {
+				s += "d"
+			}
+			continue
+		}
+
+		// here s has atleast 'd'
+		isValid, err := nextCMDPartValid(s, string(v))
+		if err != nil {
+			// invalid next
+			s = ""
+			continue
+		}
+
+		if isValid {
+			s += string(v)
+
+			if s == "do()" {
+				// found a valid cmd
+				return cur + i, true, false // + 1 for (
+			}
+
+			if s == "don't()" {
+				// found a valid cmd
+				return cur + i, true, true // + 1 for (
+			}
+		} else {
+			// this cmd is not valid
+			s = ""
+		}
+	}
+
+	//         found?, shouldDisable?
+	return cur, false, false
 }
