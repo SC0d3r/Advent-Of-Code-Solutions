@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -35,7 +36,9 @@ func main() {
 
 	founds := 0
 
+	now := time.Now()
 	// all the Xs indexes
+	// var wg sync.WaitGroup
 	for i, row := range twoD {
 		for j, char := range row {
 			if char == "A" {
@@ -43,12 +46,24 @@ func main() {
 					foundMap[key] = true
 					founds++
 				}
+
+				// wg.Add(1)
+				// go func() {
+				// 	key := findXMas(i, j, twoD)
+				// 	if key != "" {
+				// 		foundMap[key] = true
+				// 		founds++
+				// 	}
+				// 	wg.Done()
+				// }()
 			}
 		}
 	}
+	// wg.Wait()
 
-	log.Println("founds", founds)
 	log.Println("foundMap", foundMap)
+	log.Println("elapsed", time.Now().Sub(now))
+	log.Println("founds", founds)
 
 	// for key := range foundMap {
 	// 	log.Println("foundMap key", string(key))
