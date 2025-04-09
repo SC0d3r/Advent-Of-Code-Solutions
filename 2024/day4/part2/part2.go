@@ -71,7 +71,7 @@ func main() {
 	// Wait for the collector to finish processing.
 	<-done
 
-	log.Println("foundMap", foundMap)
+	// log.Println("foundMap", foundMap)
 	log.Println("elapsed", time.Now().Sub(now))
 	log.Println("founds", founds)
 }
