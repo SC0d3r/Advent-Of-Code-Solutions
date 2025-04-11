@@ -55,6 +55,9 @@ func main() {
 
 	visited := make(map[Key]struct{})
 
+	// the first pos
+	visited[Key{up[0], up[1]}] = struct{}{}
+
 	start := time.Now()
 
 	// now we have the map
