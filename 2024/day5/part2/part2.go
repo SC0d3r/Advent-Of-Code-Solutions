@@ -52,27 +52,50 @@ func main() {
 	// 	}
 	// }
 
-	cUpdates := make([][]int, 0)
+	wUpdates := make([][]int, 0)
 
 	for _, update := range updates {
 		correct := true
 		for i := 0; i < len(update)-1; i++ {
 			v := update[i]
-			if !applyRules(v, update[i+1:], rules) {
+			if ap, _ := applyRules(v, update[i+1:], rules); !ap {
 				log.Println("wrong update", update)
 				correct = false
 				break
 			}
 		}
 
-		if correct {
-			cUpdates = append(cUpdates, update)
+		if !correct {
+			wUpdates = append(wUpdates, update)
+		}
+	}
+
+	// make them in correct order
+	for _, update := range wUpdates {
+		for {
+			changeHappend := false
+			for i := 0; i < len(update)-1; i++ {
+				v := update[i]
+				ap, key := applyRules(v, update[i+1:], rules)
+				if !ap {
+					// rules doesnt apply
+					changeHappend = true
+					reverse(key, update)
+				}
+			}
+
+			// otherwise we have to check the update as long
+			// as we can apply changes cause each new change
+			// we have to apply the rules again
+			if !changeHappend {
+				break
+			}
 		}
 	}
 
 	// get the mids
 	mids := make([]int, 0)
-	for _, cs := range cUpdates {
+	for _, cs := range wUpdates {
 		idx := math.Floor(float64(len(cs) / 2))
 		mids = append(mids, cs[int(idx)])
 	}
@@ -82,10 +105,11 @@ func main() {
 		sum += x
 	}
 
+	log.Println("wrong updates", wUpdates)
 	log.Println("mids", mids, "sum", sum)
 }
 
-func applyRules(X int, Ys []int, rules map[string]bool) bool {
+func applyRules(X int, Ys []int, rules map[string]bool) (bool, string) {
 	for _, Y := range Ys {
 		key := strconv.Itoa(X) + "|" + strconv.Itoa(Y)
 		val, ok := rules[key]
@@ -97,11 +121,11 @@ func applyRules(X int, Ys []int, rules map[string]bool) bool {
 		// here the rule exists
 		if !val {
 			// invalid order
-			return false
+			return false, key
 		}
 	}
 
-	return true
+	return true, ""
 }
 
 func addRule(line string, rules map[string]bool) {
@@ -143,4 +167,34 @@ func getUpdates(lines []string) [][]int {
 	}
 
 	return res
+}
+
+func reverse(key string, update []int) {
+	nums := strings.Split(key, "|")
+	X, err := strconv.Atoi(nums[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Y, err := strconv.Atoi(nums[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// we are here cause X happend before Y and that was an erro
+	// so here we have to put the Y before X in update
+	Xidx := 0
+	Yidx := 0
+	for i, v := range update {
+		if v == X {
+			Xidx = i
+		}
+
+		if v == Y {
+			Yidx = i
+		}
+	}
+
+	// reverse
+	update[Xidx], update[Yidx] = update[Yidx], update[Xidx]
 }
