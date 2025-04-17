@@ -1,95 +1,87 @@
 package main
 
+// What i have learned here is amazing
+// 1. fast digit count O(1)
+// (in js) Math.floor(Math.log10(x)) + 1
+// 2. fast num split O(1)
+// left part = num / Math.pow(10, howManyToSplit)
+// right part = num % Math.pow(10, howManyToSplit)
+// 3. cause we only need count we can use histogram (map)
+// and for each one key (here a new stone) add a key (stone ) to that map
+// and then sum how many times that we have seen that result
+// the trick here for example if we have stone 1,1 then in that map we have
+// {1: 2} then when we compute the next we will have {2024: 2}
+// cause we do next[1 * 2024] += cnt which in here cnt for 1 is 2
+// this keeps the memory footprint small
+
 import (
-	"io"
+	"bufio"
+	"fmt"
 	"log"
+	"math"
 	"os"
 	"strconv"
-	"strings"
 )
 
+const blinks = 75
+
 func main() {
-	file, err := os.Open("2024/day11/inp1.txt")
+	// 1) read input into a map[value]count
+	f, err := os.Open("2024/day11/inp1.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer f.Close()
 
-	data, err := io.ReadAll(file)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	stones := []uint64{}
-	strStones := strings.Split(string(data), " ")
-	for _, s := range strStones {
-		n, err := strconv.Atoi(strings.TrimSpace(s))
+	counts := make(map[uint64]uint64)
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		v, err := strconv.ParseUint(scanner.Text(), 10, 64)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		stones = append(stones, uint64(n))
+		counts[v]++
 	}
 
-	log.Println("stones", stones)
+	// precompute powers of ten up to, say, 40 digits
+	pow10 := make([]uint64, 41)
+	pow10[0] = 1
+	for i := 1; i < len(pow10); i++ {
+		pow10[i] = pow10[i-1] * 10
+	}
 
-	blinks := 75
-
-	buf := make([]uint64, 0)
-	output := make([]uint64, 0)
-
-	// first blink
+	// 2) blink 75 times, but only update the counts map
 	for i := 0; i < blinks; i++ {
-		// clear content but reuse memory
-		output = output[:0]
+		next := make(map[uint64]uint64, len(counts))
+		for v, cnt := range counts {
+			switch {
+			case v == 0:
+				next[1] += cnt
 
-		buf = blink(stones, buf)
+			case digitCount(v)%2 == 0:
+				d := digitCount(v) / 2
+				div := pow10[d]
+				next[v/div] += cnt
+				next[v%div] += cnt
 
-		output = append(output, buf...)
-		stones, output = output, stones
+			default:
+				next[v*2024] += cnt
+			}
+		}
+		counts = next
 	}
 
-	log.Println("after", blinks, "blink", stones)
-	log.Println("len(stones)", len(stones))
+	// 3) sum up how many stones
+	var total uint64
+	for _, cnt := range counts {
+		total += cnt
+	}
+	fmt.Printf("After %d blinks you have %d stones\n", blinks, total)
 }
 
-func blink(stones []uint64, buf []uint64) []uint64 {
-	// clear it without realloc
-	// reset slice
-	buf = buf[:0]
-
-	// newStrones := []uint64{}
-	for _, s := range stones {
-		if s == 0 {
-			// log.Println("replace by 1", "s", s)
-			buf = append(buf, 1)
-			continue
-		}
-
-		// ss := strconv.Itoa(int(s))
-		ss := strconv.FormatUint(s, 10)
-		if len(ss)%2 == 0 {
-			// here we have to split
-			left, right := ss[:len(ss)/2], ss[len(ss)/2:]
-
-			ln, err := strconv.ParseUint(left, 10, 64)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			rn, err := strconv.ParseUint(right, 10, 64)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			// log.Println("halfing", "ss", ss, "left", left, "right", right, "ln", ln, "rn", rn)
-			buf = append(buf, uint64(ln))
-			buf = append(buf, uint64(rn))
-			continue
-		}
-
-		// log.Println("*2024", "s", s)
-		buf = append(buf, uint64(2024*s))
-	}
-	return buf
+// digitCount returns ⌊log₁₀(v)⌋+1 (works for v>0)
+func digitCount(v uint64) int {
+	// using math.Log10 is slightly slower but very concise:
+	return int(math.Floor(math.Log10(float64(v)))) + 1
 }
