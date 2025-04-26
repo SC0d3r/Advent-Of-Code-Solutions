@@ -7,122 +7,19 @@ import (
 	"strings"
 )
 
+var UL = []int{-1, -1}
+var UR = []int{-1, 1}
+var DL = []int{1, -1}
+var DR = []int{1, 1}
+var UP = []int{-1, 0}
+var DOWN = []int{1, 0}
+var LEFT = []int{0, -1}
+var RIGHT = []int{0, 1}
+
 // Pos is your renamed Point, with an extra label field L.
 type Pos struct {
 	x, y int
 	l    string
-}
-
-// Vertex is a corner of a unit square.
-type Vertex struct{ X, Y int }
-
-// Edge is an undirected unit‐length segment between two vertices.
-type Edge struct{ A, B Vertex }
-
-// canonicalEdge orders the endpoints so we can use it as a map key.
-func canonicalEdge(v1, v2 Vertex) Edge {
-	if v1.X < v2.X || (v1.X == v2.X && v1.Y < v2.Y) {
-		return Edge{A: v1, B: v2}
-	}
-	return Edge{A: v2, B: v1}
-}
-
-// dir returns 0=E,1=N,2=W,3=S for the unit step v1→v2.
-func dir(v1, v2 Vertex) int {
-	switch {
-	case v2.X > v1.X:
-		return 0
-	case v2.Y > v1.Y:
-		return 1
-	case v2.X < v1.X:
-		return 2
-	default:
-		return 3
-	}
-}
-
-// countSides computes the number of straight sides in the boundary loop.
-// We take cells as []Pos (ignoring the L field).
-func countSides(cells []Pos) int {
-	// 1) build set of boundary edges
-	edges := make(map[Edge]bool)
-	addEdge := func(v1, v2 Vertex) {
-		e := canonicalEdge(v1, v2)
-		if edges[e] {
-			delete(edges, e) // shared → interior
-		} else {
-			edges[e] = true
-		}
-	}
-
-	for _, c := range cells {
-		v00 := Vertex{c.x, c.y}
-		v10 := Vertex{c.x + 1, c.y}
-		v11 := Vertex{c.x + 1, c.y + 1}
-		v01 := Vertex{c.x, c.y + 1}
-		addEdge(v00, v10) // bottom
-		addEdge(v10, v11) // right
-		addEdge(v11, v01) // top
-		addEdge(v01, v00) // left
-	}
-
-	// 2) build adjacency list for the boundary graph
-	adj := make(map[Vertex][]Vertex)
-	for e := range edges {
-		adj[e.A] = append(adj[e.A], e.B)
-		adj[e.B] = append(adj[e.B], e.A)
-	}
-
-	// 3) pick a canonical start vertex: smallest (X,Y)
-	var start Vertex
-	first := true
-	for v := range adj {
-		if first || v.X < start.X || (v.X == start.X && v.Y < start.Y) {
-			start, first = v, false
-		}
-	}
-
-	// 4) initialize the walk
-	nbrs := adj[start]
-	if len(nbrs) != 2 {
-		return 0 // not a single loop
-	}
-	firstNext := nbrs[0]
-	prevDir := dir(start, firstNext)
-	sides := 1
-
-	prev := start
-	current := firstNext
-
-	// 5) walk until we close back to (start → firstNext),
-	//    *without* counting that final turn.
-	for {
-		// pick the next vertex (the one that isn’t prev)
-		neis := adj[current]
-		var next Vertex
-		if neis[0] == prev {
-			next = neis[1]
-		} else {
-			next = neis[0]
-		}
-
-		// if we're about to walk back over the very first edge, stop here.
-		if current == start && next == firstNext {
-			break
-		}
-
-		// count a new side whenever direction changes
-		d := dir(current, next)
-		if d != prevDir {
-			sides++
-			prevDir = d
-		}
-
-		// advance
-		prev, current = current, next
-	}
-
-	return sides
 }
 
 func main() {
@@ -156,12 +53,12 @@ func main() {
 			nds := nodes(Pos{l: x, x: i, y: j}, m)
 			// log.Println("nds", nds, "m", m)
 			area := len(nds)
-			sides := countSides(nds)
+			sides := corners(nds, m)
 			for _, n := range nds {
 				m[n.x][n.y] = "-"
 			}
 			// log.Println(nds[0].l, "area", area, "sides", len(keep), keep)
-			// log.Println(nds[0].l, "area", area, "sides", sides)
+			log.Println(nds[0].l, "area", area, "sides", sides)
 			ret += area * sides
 		}
 	}
@@ -212,4 +109,133 @@ func nodes(p Pos, m [][]string) []Pos {
 func vIdx(i int, j int, rows int, cols int) bool {
 	invalid := i < 0 || j < 0 || i >= rows || j >= cols
 	return !invalid
+}
+
+func corners(nds []Pos, m [][]string) int {
+
+	res := 0
+	for _, p := range nds {
+		log.Println("corners", p)
+		if diffUL(p, m) {
+			log.Println("diffUL", p)
+			res++
+		}
+
+		if diffDL(p, m) {
+			log.Println("diffDL", p)
+			res++
+		}
+
+		if diffUR(p, m) {
+			log.Println("diffUR", p)
+			res++
+		}
+
+		if diffDR(p, m) {
+			log.Println("diffDR", p)
+			res++
+		}
+
+	}
+
+	return res
+	// ispow2 := (res & (res - 1)) == 0
+	// if ispow2 {
+	// 	return res
+	// }
+
+	// // we make it to the closest pow of 2
+	// return int(math.Pow(2, math.Ceil(float64(math.Log2(float64(res))))))
+}
+
+func diffDR(p Pos, m [][]string) bool {
+	rows := len(m)
+	cols := len(m[0])
+
+	// top
+	i := DOWN[0] + p.x
+	j := DOWN[1] + p.y
+	upSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	// left
+	i = RIGHT[0] + p.x
+	j = RIGHT[1] + p.y
+	leftSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	i = DR[0] + p.x
+	j = DR[1] + p.y
+	diagSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	// convex corner if both ortho are absent,
+	// concave corner if both ortho are present but diag is absent
+	return (!upSame && !leftSame) || (upSame && leftSame && !diagSame)
+}
+
+func diffUR(p Pos, m [][]string) bool {
+	rows := len(m)
+	cols := len(m[0])
+
+	// top
+	i := UP[0] + p.x
+	j := UP[1] + p.y
+	upSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	// left
+	i = RIGHT[0] + p.x
+	j = RIGHT[1] + p.y
+	leftSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	i = UR[0] + p.x
+	j = UR[1] + p.y
+	diagSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	// convex corner if both ortho are absent,
+	// concave corner if both ortho are present but diag is absent
+	return (!upSame && !leftSame) || (upSame && leftSame && !diagSame)
+}
+
+func diffDL(p Pos, m [][]string) bool {
+	rows := len(m)
+	cols := len(m[0])
+
+	// top
+	i := DOWN[0] + p.x
+	j := DOWN[1] + p.y
+	upSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	// left
+	i = LEFT[0] + p.x
+	j = LEFT[1] + p.y
+	leftSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	i = DL[0] + p.x
+	j = DL[1] + p.y
+	diagSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	// convex corner if both ortho are absent,
+	// concave corner if both ortho are present but diag is absent
+	return (!upSame && !leftSame) || (upSame && leftSame && !diagSame)
+}
+
+func diffUL(p Pos, m [][]string) bool {
+	rows := len(m)
+	cols := len(m[0])
+
+	// top
+	i := UP[0] + p.x
+	j := UP[1] + p.y
+	upSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	// left
+	i = LEFT[0] + p.x
+	j = LEFT[1] + p.y
+	leftSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	i = UL[0] + p.x
+	j = UL[1] + p.y
+	diagSame := vIdx(i, j, rows, cols) && m[i][j] == p.l
+
+	// convex corner if both ortho are absent,
+	// concave corner if both ortho are present but diag is absent
+	return (!upSame && !leftSame) || (upSame && leftSame && !diagSame)
 }
