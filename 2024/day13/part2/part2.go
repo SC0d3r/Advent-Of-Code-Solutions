@@ -124,6 +124,7 @@ func gcd(x, y int) Partial {
 	return Partial{gcd: x, u: u0, v: v0}
 }
 
+// Linear Diophantine Equation
 // Solve simultaneously:
 //
 //	m*a.x + n*b.x = pz.x
