@@ -56,10 +56,6 @@ func main() {
 
 	log.Println("mns", mns)
 
-	// fmn := mns[3]
-	// press := algo(fmn)
-	// log.Println("press", press, "machine", fmn)
-
 	sumt := 0
 	for _, mn := range mns {
 		pressA := algo(mn.a, mn.b, mn.pz)
@@ -81,8 +77,6 @@ func main() {
 
 		log.Println("pressA", pressA, "pressB", pressB, "ta", ta)
 
-		// sumt += (press.btnA * 3) + (press.btnB * 1)
-		// sumt += (press.btnA * 3) + (press.btnB * 1)
 		sumt += t
 	}
 
@@ -94,63 +88,25 @@ func algo(ba Btn, bb Btn, pz PZ) Press {
 	aps := []BtnPress{}        // [[val, count press]]
 	bmap := map[int]BtnPress{} // map of value to how many presses
 
-	// log.Println("pz is", mn.pz)
-
-	// if ba.x >= bb.x {
-
 	// btn A
 	vx := ba.x
-	// vy := mn.a.y
 	cnt := 1
 	for vx < pz.x {
-		// amap[vx] = cnt
 		bp := BtnPress{btn: ba, cnt: cnt}
 		aps = append(aps, bp)
 		cnt++
 		vx += ba.x
-		// vy = vy * cnt
 	}
 	// log.Println("vx is", vx, "cnt is", cnt)
 
 	// btn B
 	vx = bb.x
-	// vy := mn.b.y
 	cnt = 1
 	for vx < pz.x {
 		bmap[vx] = BtnPress{btn: bb, cnt: cnt}
 		cnt++
 		vx += bb.x
-		// vy = vy * cnt
 	}
-
-	// } else {
-	// 	// btn B
-	// 	vx := bb.x
-	// 	// vy := mn.a.y
-	// 	cnt := 1
-	// 	for vx < pz.x {
-	// 		// amap[vx] = cnt
-	// 		bp := BtnPress{btn: bb, cnt: cnt}
-	// 		aps = append(aps, bp)
-	// 		cnt++
-	// 		vx += bb.x
-	// 		// vy = vy * cnt
-	// 	}
-
-	// 	// btn A
-	// 	vx = ba.x
-	// 	// vy := mn.b.y
-	// 	cnt = 1
-	// 	for vx < pz.x {
-	// 		bmap[vx] = BtnPress{btn: ba, cnt: cnt}
-	// 		cnt++
-	// 		vx += ba.x
-	// 		// vy = vy * cnt
-	// 	}
-	// }
-
-	// log.Println("aps", aps)
-	// log.Println("bmap", bmap)
 
 	for i := len(aps) - 1; i >= 0; i-- {
 		bp := aps[i]
@@ -159,17 +115,10 @@ func algo(ba Btn, bb Btn, pz PZ) Press {
 
 		if x == pz.x && y == pz.y {
 			// x,y on prize (found it)
-			// if ba.x > bb.x {
 			return Press{
 				btnA: bp.cnt,
 				btnB: 0,
 			}
-			// } else {
-			// 	return Press{
-			// 		btnB: bp.cnt,
-			// 		btnA: 0,
-			// 	}
-			// }
 		}
 
 		rem := pz.x - x
@@ -180,11 +129,7 @@ func algo(ba Btn, bb Btn, pz PZ) Press {
 			resY := y + (obp.btn.y * obp.cnt)
 			if resY == pz.y {
 				// found match
-				// if ba.x > bb.x {
 				return Press{btnA: bp.cnt, btnB: obp.cnt}
-				// } else {
-				// 	return Press{btnB: bp.cnt, btnA: obp.cnt}
-				// }
 			}
 		}
 	}
@@ -199,7 +144,6 @@ func createMN(sc *bufio.Scanner) MN {
 		log.Fatal("this should not happen")
 	}
 	btna := readBtn(l, lbA)
-	// log.Println("l", l, "btna", btna)
 
 	// advance the scanner
 	if !sc.Scan() {
@@ -211,7 +155,6 @@ func createMN(sc *bufio.Scanner) MN {
 		log.Fatal("this should not happen")
 	}
 	btnb := readBtn(l, lbB)
-	// log.Println("l", l, "btnb", btnb)
 
 	// advance the scanner
 	if !sc.Scan() {
@@ -223,7 +166,6 @@ func createMN(sc *bufio.Scanner) MN {
 		log.Fatal("this should not happen")
 	}
 	pz := readPz(l)
-	// log.Println("l", l, "pz", pz)
 
 	// advance the scanner
 	sc.Scan()
@@ -232,7 +174,6 @@ func createMN(sc *bufio.Scanner) MN {
 }
 
 func readPz(l string) PZ {
-	// re := regexp.MustCompile(`((?<=\+)\d+)`)
 	re := regexp.MustCompile(`\=(\d+)`)
 
 	// btn a
@@ -252,7 +193,6 @@ func readPz(l string) PZ {
 }
 
 func readBtn(l string, label LB) Btn {
-	// re := regexp.MustCompile(`((?<=\+)\d+)`)
 	re := regexp.MustCompile(`\+(\d+)`)
 
 	// btn a
