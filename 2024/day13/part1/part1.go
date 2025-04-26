@@ -56,81 +56,98 @@ func main() {
 
 	log.Println("mns", mns)
 
-	fmn := mns[3]
-	press := algo(fmn)
-	log.Println("press", press, "machine", fmn)
+	// fmn := mns[3]
+	// press := algo(fmn)
+	// log.Println("press", press, "machine", fmn)
 
 	sumt := 0
 	for _, mn := range mns {
-		press := algo(mn)
-		if press.btnA == -1 {
+		pressA := algo(mn.a, mn.b, mn.pz)
+		// reverse the btn
+		pressB := algo(mn.b, mn.a, mn.pz)
+
+		if pressA.btnA == -1 || pressB.btnA == -1 {
 			continue
 		}
-		sumt += (press.btnA * 3) + (press.btnB * 1)
+
+		ta := (pressA.btnA * 3) + (pressA.btnB * 1)
+		t := ta
+
+		if pressA.btnA != pressB.btnA && pressA.btnB != pressB.btnB {
+			// if different
+			tb := (pressB.btnA * 1) + (pressB.btnB * 3)
+			t = min(ta, tb)
+		}
+
+		log.Println("pressA", pressA, "pressB", pressB, "ta", ta)
+
+		// sumt += (press.btnA * 3) + (press.btnB * 1)
+		// sumt += (press.btnA * 3) + (press.btnB * 1)
+		sumt += t
 	}
 
 	log.Println("sum token", sumt)
 }
 
-func algo(mn MN) Press {
+func algo(ba Btn, bb Btn, pz PZ) Press {
 	// create a map of all possible btn a presses
 	aps := []BtnPress{}        // [[val, count press]]
 	bmap := map[int]BtnPress{} // map of value to how many presses
 
 	// log.Println("pz is", mn.pz)
 
-	if mn.a.x >= mn.b.x {
+	// if ba.x >= bb.x {
 
-		// btn A
-		vx := mn.a.x
-		// vy := mn.a.y
-		cnt := 1
-		for vx < mn.pz.x {
-			// amap[vx] = cnt
-			bp := BtnPress{btn: mn.a, cnt: cnt}
-			aps = append(aps, bp)
-			cnt++
-			vx += mn.a.x
-			// vy = vy * cnt
-		}
-		// log.Println("vx is", vx, "cnt is", cnt)
-
-		// btn B
-		vx = mn.b.x
-		// vy := mn.b.y
-		cnt = 1
-		for vx < mn.pz.x {
-			bmap[vx] = BtnPress{btn: mn.b, cnt: cnt}
-			cnt++
-			vx += mn.b.x
-			// vy = vy * cnt
-		}
-
-	} else {
-		// btn B
-		vx := mn.b.x
-		// vy := mn.a.y
-		cnt := 1
-		for vx < mn.pz.x {
-			// amap[vx] = cnt
-			bp := BtnPress{btn: mn.b, cnt: cnt}
-			aps = append(aps, bp)
-			cnt++
-			vx += mn.b.x
-			// vy = vy * cnt
-		}
-
-		// btn A
-		vx = mn.a.x
-		// vy := mn.b.y
-		cnt = 1
-		for vx < mn.pz.x {
-			bmap[vx] = BtnPress{btn: mn.a, cnt: cnt}
-			cnt++
-			vx += mn.a.x
-			// vy = vy * cnt
-		}
+	// btn A
+	vx := ba.x
+	// vy := mn.a.y
+	cnt := 1
+	for vx < pz.x {
+		// amap[vx] = cnt
+		bp := BtnPress{btn: ba, cnt: cnt}
+		aps = append(aps, bp)
+		cnt++
+		vx += ba.x
+		// vy = vy * cnt
 	}
+	// log.Println("vx is", vx, "cnt is", cnt)
+
+	// btn B
+	vx = bb.x
+	// vy := mn.b.y
+	cnt = 1
+	for vx < pz.x {
+		bmap[vx] = BtnPress{btn: bb, cnt: cnt}
+		cnt++
+		vx += bb.x
+		// vy = vy * cnt
+	}
+
+	// } else {
+	// 	// btn B
+	// 	vx := bb.x
+	// 	// vy := mn.a.y
+	// 	cnt := 1
+	// 	for vx < pz.x {
+	// 		// amap[vx] = cnt
+	// 		bp := BtnPress{btn: bb, cnt: cnt}
+	// 		aps = append(aps, bp)
+	// 		cnt++
+	// 		vx += bb.x
+	// 		// vy = vy * cnt
+	// 	}
+
+	// 	// btn A
+	// 	vx = ba.x
+	// 	// vy := mn.b.y
+	// 	cnt = 1
+	// 	for vx < pz.x {
+	// 		bmap[vx] = BtnPress{btn: ba, cnt: cnt}
+	// 		cnt++
+	// 		vx += ba.x
+	// 		// vy = vy * cnt
+	// 	}
+	// }
 
 	// log.Println("aps", aps)
 	// log.Println("bmap", bmap)
@@ -140,34 +157,34 @@ func algo(mn MN) Press {
 		x := bp.btn.x * bp.cnt
 		y := bp.btn.y * bp.cnt
 
-		if x == mn.pz.x && y == mn.pz.y {
+		if x == pz.x && y == pz.y {
 			// x,y on prize (found it)
-			if mn.a.x > mn.b.x {
-				return Press{
-					btnA: bp.cnt,
-					btnB: 0,
-				}
-			} else {
-				return Press{
-					btnB: bp.cnt,
-					btnA: 0,
-				}
+			// if ba.x > bb.x {
+			return Press{
+				btnA: bp.cnt,
+				btnB: 0,
 			}
+			// } else {
+			// 	return Press{
+			// 		btnB: bp.cnt,
+			// 		btnA: 0,
+			// 	}
+			// }
 		}
 
-		rem := mn.pz.x - x
+		rem := pz.x - x
 		obp, exists := bmap[rem]
 		if exists {
 			// found a match
 			// does y match too?
 			resY := y + (obp.btn.y * obp.cnt)
-			if resY == mn.pz.y {
+			if resY == pz.y {
 				// found match
-				if mn.a.x > mn.b.x {
-					return Press{btnA: bp.cnt, btnB: obp.cnt}
-				} else {
-					return Press{btnB: bp.cnt, btnA: obp.cnt}
-				}
+				// if ba.x > bb.x {
+				return Press{btnA: bp.cnt, btnB: obp.cnt}
+				// } else {
+				// 	return Press{btnB: bp.cnt, btnA: obp.cnt}
+				// }
 			}
 		}
 	}
