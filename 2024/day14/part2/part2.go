@@ -70,19 +70,49 @@ func main() {
 
 	// b := Bot{p: Pos{x: cols - 1, y: rows - 1}, v: Vel{}}
 	// log.Println("inQuad", "bot", b, inQuad(b, rows, cols))
-	tree := tposes(len(bots), rows, cols)
+	// tree := tposes(len(bots), rows, cols)
 	// log.Println("tree", tree)
 
-	for !isTree(bots, tree) {
+	// for !isTree(bots, tree) {
+	// 	for _, b := range bots {
+	// 		// log.Println("steping")
+	// 		step(b, rows, cols)
+	// 	}
+	// }
+
+	// best height
+	bh := int(1e12)
+	// best t
+	bt := 0
+
+	for t := 0; t < 200000; t++ {
 		for _, b := range bots {
-			// log.Println("steping")
 			step(b, rows, cols)
+		}
+
+		// after each  step
+		minY := int(1e9)
+		maxY := 0
+		for _, b := range bots {
+			if b.p.y < (minY) {
+				minY = b.p.y
+			}
+
+			if b.p.y > maxY {
+				maxY = b.p.y
+			}
+		}
+
+		h := maxY - minY + 1
+		if h < bh {
+			bh = h
+			bt = t
 		}
 	}
 
 	mx := cols / 2
 	my := rows / 2
-	log.Println("mx", mx, "my", my)
+	log.Println("mx", mx, "my", my, "bh", bh, "bt", bt)
 }
 
 func step(b *Bot, rows int, cols int) {
